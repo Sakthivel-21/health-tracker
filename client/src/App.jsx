@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard'
 import Register from './components/Register'
 import Login from './components/Login'
 import FoodLog from './pages/FoogLog'
+import CalculateCalories from './pages/CalculateCalories'
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/foodlog" element={<FoodLog />} />
+            <Route path="/calculatecalories" element={<CalculateCalories />} />
           </Routes>
         </main>
         <Footer />

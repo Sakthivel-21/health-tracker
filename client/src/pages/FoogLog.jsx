@@ -13,6 +13,32 @@ const FoodLog = () => {
 
   const token = localStorage.getItem('token');
 
+ 
+
+  {/*const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(
+        'localhost:8000/health/foods/calculate_nutrition/',
+        {
+          food_id: foodId,
+          meal_type: mealType,
+          quantity,
+        },
+        {
+          headers: { Authorization: `Token ${token}` },
+        }
+      );
+      setFoodId('');
+      setQuantity(1);
+      setError('');
+      fetchFoodLogs();
+    } catch (err) {
+      setError('Failed to submit food log');
+      console.error(err);
+    }
+  };
+
   const fetchFoodLogs = async () => {
     try {
       const response = await axios.get('http://localhost:8000/admin/foods/foodlog/', {
@@ -35,31 +61,7 @@ const FoodLog = () => {
   const calculateTotalCalories = (logs) => {
     const total = logs.reduce((sum, log) => sum + log.quantity * 100, 0); // Simulated value
     setCalories(total);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(
-        'http://localhost:8000/admin/foods/foodlog/add/',
-        {
-          food_id: foodId,
-          meal_type: mealType,
-          quantity,
-        },
-        {
-          headers: { Authorization: `Token ${token}` },
-        }
-      );
-      setFoodId('');
-      setQuantity(1);
-      setError('');
-      fetchFoodLogs();
-    } catch (err) {
-      setError('Failed to submit food log');
-      console.error(err);
-    }
-  };
+  };*/}
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">

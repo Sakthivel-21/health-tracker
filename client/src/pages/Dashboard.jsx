@@ -1,146 +1,101 @@
-import React from 'react';
-import { Card, CardContent } from '../components/ui/Card';
-import { Progress } from '../components/ui/Progress';
-import { FaFireAlt, FaHeart, FaTint, FaWeight } from 'react-icons/fa';
-import { MdFastfood } from 'react-icons/md';
-import { FiChevronDown } from 'react-icons/fi';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import {
+  FaUserCircle,
+  FaHeartbeat,
+  FaChartLine,
+  FaSignOutAlt,
+  FaWeight,
+  FaFireAlt,
+  FaBirthdayCake,
+  FaBars
+} from 'react-icons/fa';
 
 const Dashboard = () => {
+  const [userHealth, setUserHealth] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchUserHealth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://localhost:8000/auth/user-health/', {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        });
+        setUserHealth(response.data.results[0]);
+      } catch (error) {
+        console.error('Error fetching user health data:', error);
+      }
+    };
+
+    fetchUserHealth();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gray-100 flex text-gray-900">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside className="w-20 bg-black text-white flex flex-col items-center py-6">
-        <div className="bg-lime-400 p-2 rounded-full mb-6" />
-        <nav className="space-y-6">
-          <button className="bg-lime-400 p-3 rounded-full" />
-          <button className="p-3 rounded-full bg-gray-800" />
-          <button className="p-3 rounded-full bg-gray-800" />
-          <button className="p-3 rounded-full bg-gray-800" />
-        </nav>
-      </aside>
+      <div className={`w-full md:w-64 bg-lime-100 text-black flex flex-col p-6 space-y-6 transition-all duration-300 ${menuOpen ? 'block' : 'hidden md:block'}`}>
+        <div className="text-3xl font-bold tracking-wide mb-6">HealthApp</div>
+
+        <div className="flex flex-col gap-4 text-lg">
+          <div className="flex items-center gap-3 hover:text-black font-medium cursor-pointer">
+            <FaUserCircle className="text-lime-700" />
+            <span>Profile</span>
+          </div>
+          <div className="flex items-center gap-3 hover:text-black font-medium cursor-pointer">
+            <FaHeartbeat className="text-lime-700" />
+            <span>Health</span>
+          </div>
+          <div className="flex items-center gap-3 hover:text-black font-medium cursor-pointer">
+            <FaChartLine className="text-lime-700" />
+            <span>Reports</span>
+          </div>
+          <div className="flex items-center gap-3 text-red-700 font-medium cursor-pointer mt-auto">
+            <FaSignOutAlt className="text-lime-700" />
+            <span>Logout</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu Toggle */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-lime-400 text-black">
+        <div className="text-2xl font-bold">HealthApp</div>
+        <button onClick={() => setMenuOpen(!menuOpen)}>
+          <FaBars size={24} />
+        </button>
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 grid grid-cols-3 gap-6">
-        {/* User Info and Body Overview */}
-        <div className="col-span-2">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <img src="https://via.placeholder.com/40" alt="user" className="rounded-full w-10 h-10" />
-              <span className="font-semibold">Jenny Wilson</span>
-              <FiChevronDown className="text-xl" />
+      <div className="flex-1 p-6 flex justify-center items-center">
+        {userHealth ? (
+          <div className="bg-white shadow-xl rounded-3xl p-10 w-full max-w-md text-center border-2 border-lime-500">
+            <h2 className="text-3xl font-bold mb-6 text-gray-800">
+              Welcome, {userHealth.user}
+            </h2>
+            <h3 className="text-2xl font-semibold mb-4 text-lime-600 flex items-center justify-center gap-2">
+              <FaHeartbeat /> Your Health Data
+            </h3>
+            <div className="space-y-4 text-lg text-gray-700">
+              <p className="bg-lime-100 p-3 rounded-xl flex items-center justify-center gap-2">
+                <FaBirthdayCake className="text-lime-600" />
+                {userHealth.age} years
+              </p>
+              <p className="bg-lime-100 p-3 rounded-xl flex items-center justify-center gap-2">
+                <FaWeight className="text-lime-600" />
+                {userHealth.weight} kg
+              </p>
+              <p className="bg-lime-100 p-3 rounded-xl flex items-center justify-center gap-2">
+                <FaFireAlt className="text-lime-600" />
+                {userHealth.daily_calorie_limit} kcal/day
+              </p>
             </div>
           </div>
-
-          <h2 className="text-2xl font-bold mt-6">Body Overview</h2>
-
-          <Card className="mt-4 bg-black text-white">
-            <CardContent className="p-6">
-              <p className="text-lg">You’ve gained <span className="text-lime-400 font-bold">2kg</span> in a month, keep it up!</p>
-              <p className="text-sm mt-1">Still need to gain</p>
-              <h3 className="text-3xl font-bold">950 kcal</h3>
-              <div className="flex gap-6 mt-4">
-                <div className="text-center">
-                  <p>Protein</p>
-                  <Progress value={35} className="bg-gray-800" />
-                  <p>35%</p>
-                </div>
-                <div className="text-center">
-                  <p>Carbo</p>
-                  <Progress value={65} className="bg-gray-800" />
-                  <p>65%</p>
-                </div>
-                <div className="text-center">
-                  <p>Fat</p>
-                  <Progress value={65} className="bg-gray-800" />
-                  <p>65%</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <h3 className="text-xl font-semibold mt-6">New Activity</h3>
-          <div className="grid grid-cols-3 gap-4 mt-4">
-            <Card className="bg-lime-200">
-              <CardContent className="p-4">
-                <h4 className="font-semibold">Drinking Tracker</h4>
-                <p className="text-sm">Stay hydrated, it's nature’s best refreshment</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-yellow-100">
-              <CardContent className="p-4">
-                <h4 className="font-semibold">Daily Exercise</h4>
-                <p className="text-sm">Stay fit and active, it's nature’s best medicine</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-gray-800 text-white">
-              <CardContent className="p-4">
-                <h4 className="font-semibold">Sleep Tracker</h4>
-                <p className="text-sm">Quality sleep is the best recovery</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Daily Targets and Meal Plan */}
-        <div>
-          <h2 className="text-2xl font-bold">My Daily Target</h2>
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <Card>
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <p>Water</p>
-                  <p className="font-bold">2300 ml</p>
-                </div>
-                <FaTint className="text-blue-500 text-2xl" />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <p>Calories</p>
-                  <p className="font-bold">890 kcal</p>
-                </div>
-                <FaFireAlt className="text-orange-500 text-2xl" />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <p>Weight</p>
-                  <p className="font-bold">62 Kg</p>
-                </div>
-                <FaWeight className="text-orange-400 text-2xl" />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <p>BPM</p>
-                  <p className="font-bold">110 BPM</p>
-                </div>
-                <FaHeart className="text-red-500 text-2xl" />
-              </CardContent>
-            </Card>
-          </div>
-
-          <h3 className="text-xl font-semibold mt-6">My Meal Plan</h3>
-          <div className="space-y-4 mt-4">
-            {['Breakfast', 'Lunch', 'Dinner'].map((meal) => (
-              <Card key={meal}>
-                <CardContent className="p-4 flex justify-between items-center">
-                  <div>
-                    <h4 className="font-semibold">{meal}</h4>
-                    <p className="text-sm text-gray-500">250 kcal, 10 kcal, 120 kcal</p>
-                  </div>
-                  <button className="text-2xl bg-gray-200 p-2 rounded-full">
-                    <MdFastfood />
-                  </button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </main>
+        ) : (
+          <p className="text-gray-600 text-xl">Loading health data...</p>
+        )}
+      </div>
     </div>
   );
 };
