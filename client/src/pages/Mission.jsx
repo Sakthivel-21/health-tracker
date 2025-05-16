@@ -7,7 +7,7 @@ function Mission() {
 
       {/* Section 1: Our Mission */}
       <section className="w-full max-w-6xl text-center space-y-10">
-        <h2 className="text-2xl md:text-4xl font-bold text-gray-800">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
         <span className='text-lime-400'>O</span>ur   <span className='text-lime-400'>M</span>ission</h2>
         <div className="grid md:grid-cols-3 gap-8">
           {[
@@ -41,7 +41,7 @@ function Mission() {
 
       {/* Section 2: Why HealthTracker */}
       <section className="text-center max-w-4xl w-full px-4">
-        <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-6">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">
         <span className='text-lime-400'>W</span>hy   <span className='text-lime-400'>H</span>ealthTracker?
         </h2>
         <p className="text-base md:text-xl text-gray-800 leading-relaxed">

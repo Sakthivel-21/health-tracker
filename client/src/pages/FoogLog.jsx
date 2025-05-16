@@ -1,160 +1,147 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
-const mealTypes = ['Breakfast', 'Afternoon', 'Night'];
+import { FaUtensils, FaCalendarAlt, FaChartPie } from 'react-icons/fa';
+import { GiMeal } from 'react-icons/gi';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const FoodLog = () => {
-  const [foodId, setFoodId] = useState('');
-  const [mealType, setMealType] = useState('Breakfast');
-  const [quantity, setQuantity] = useState(1);
-  const [foodLogs, setFoodLogs] = useState([]);
-  const [calories, setCalories] = useState(0);
-  const [error, setError] = useState('');
-
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [todaysLogs, setTodaysLogs] = useState([]);
+  const [summary, setSummary] = useState({});
   const token = localStorage.getItem('token');
 
- 
-
-  {/*const handleSubmit = async (e) => {
-    e.preventDefault();
+  const fetchData = async (date = selectedDate) => {
     try {
-      await axios.post(
-        'localhost:8000/health/foods/calculate_nutrition/',
-        {
-          food_id: foodId,
-          meal_type: mealType,
-          quantity,
-        },
-        {
-          headers: { Authorization: `Token ${token}` },
-        }
-      );
-      setFoodId('');
-      setQuantity(1);
-      setError('');
-      fetchFoodLogs();
-    } catch (err) {
-      setError('Failed to submit food log');
-      console.error(err);
-    }
-  };
-
-  const fetchFoodLogs = async () => {
-    try {
-      const response = await axios.get('http://localhost:8000/admin/foods/foodlog/', {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
+      const dateStr = date.toISOString().split('T')[0];
+      const logRes = await axios.get('http://localhost:8000/health/food-logs/history/', {
+        headers: { Authorization: `Token ${token}` },
       });
-      setFoodLogs(response.data);
-      calculateTotalCalories(response.data);
-    } catch (err) {
-      setError('Failed to load food logs');
-      console.error(err);
+      const logs = logRes.data[dateStr] || [];
+      setTodaysLogs(logs);
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (dateStr === todayStr) {
+        const summaryRes = await axios.get('http://localhost:8000/health/food-logs/today_summary/', {
+          headers: { Authorization: `Token ${token}` },
+        });
+        setSummary(summaryRes.data.today_summary || {});
+      } else {
+        const manual = logs.reduce(
+          (acc, log) => {
+            acc.total_calories += log.calories;
+            acc.total_protein += log.protein;
+            acc.total_carbs += log.carbs;
+            acc.total_fats += log.fats;
+            return acc;
+          },
+          { total_calories: 0, total_protein: 0, total_carbs: 0, total_fats: 0 }
+        );
+        setSummary(manual);
+      }
+    } catch (error) {
+      console.error('Error fetching food logs or summary:', error);
     }
   };
 
   useEffect(() => {
-    fetchFoodLogs();
-  }, []);
+    fetchData();
+  }, [selectedDate]);
 
-  const calculateTotalCalories = (logs) => {
-    const total = logs.reduce((sum, log) => sum + log.quantity * 100, 0); // Simulated value
-    setCalories(total);
-  };*/}
+  const groupedLogs = todaysLogs.reduce((acc, log) => {
+    const meal = log.meal_type.charAt(0).toUpperCase() + log.meal_type.slice(1);
+    if (!acc[meal]) acc[meal] = [];
+    acc[meal].push(log);
+    return acc;
+  }, {});
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <h1 className="text-4xl font-bold text-center text-green-700 mb-8">🍽️ Food Log Tracker</h1>
+    <div className="min-h-screen bg-gradient-to-br from-lime-50 to-lime-100 py-10 px-4 sm:px-6 lg:px-12">
+      {/* Title */}
+      <h1 className="text-4xl font-extrabold text-center text-lime-500 mb-12 drop-shadow-md">
+         Food Log Summary
+      </h1>
 
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-xl mx-auto bg-white p-6 rounded-2xl shadow-lg border border-green-100"
-      >
-        {error && (
-          <div className="mb-4 text-red-500 text-center font-medium">{error}</div>
-        )}
-
-        <div className="mb-4">
-          <label className="block mb-1 font-semibold text-gray-700">Food Name</label>
-          <input
-            type="text"
-            value={foodId}
-            onChange={(e) => setFoodId(e.target.value)}
-            placeholder="e.g., Idly, Dosa"
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+      {/* Date Picker */}
+      <div className="flex justify-center mb-10">
+        <div className="flex items-center gap-3 bg-white shadow-md rounded-full px-6 py-3 border border-lime-300">
+          <FaCalendarAlt className="text-lime-500 text-lg" />
+          <DatePicker
+            selected={selectedDate}
+            onChange={(date) => setSelectedDate(date)}
+            maxDate={new Date()}
+            className="text-lime-700 font-medium focus:outline-none bg-transparent"
+            dateFormat="yyyy-MM-dd"
           />
         </div>
+      </div>
 
-        <div className="mb-4">
-          <label className="block mb-1 font-semibold text-gray-700">Meal Type</label>
-          <select
-            value={mealType}
-            onChange={(e) => setMealType(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-          >
-            {mealTypes.map((type, index) => (
-              <option key={index} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-6">
-          <label className="block mb-1 font-semibold text-gray-700">Quantity</label>
-          <input
-            type="number"
-            min={1}
-            value={quantity}
-            onChange={(e) => setQuantity(parseInt(e.target.value))}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-green-500 text-white font-bold py-2 rounded-lg hover:bg-green-600 transition"
-        >
-          ➕ Add Log
-        </button>
-      </form>
-
-      <div className="max-w-3xl mx-auto mt-10">
-        <h2 className="text-2xl font-semibold text-green-700 mb-4">📝 Food Log Summary</h2>
-
-        {foodLogs.length === 0 ? (
-          <p className="text-gray-600 text-center">No food logs yet.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-lg shadow border border-gray-200">
-              <thead className="bg-green-100 text-green-800">
-                <tr>
-                  <th className="py-3 px-4 text-left">Food</th>
-                  <th className="py-3 px-4 text-left">Meal</th>
-                  <th className="py-3 px-4 text-center">Quantity</th>
-                  <th className="py-3 px-4 text-right">Est. Calories</th>
-                </tr>
-              </thead>
-              <tbody>
-                {foodLogs.map((log, index) => (
-                  <tr key={index} className="border-t hover:bg-gray-50">
-                    <td className="py-2 px-4">{log.food_id}</td>
-                    <td className="py-2 px-4">{log.meal_type}</td>
-                    <td className="py-2 px-4 text-center">{log.quantity}</td>
-                    <td className="py-2 px-4 text-right">{log.quantity * 100} kcal</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Nutrition Summary */}
+      <div className="max-w-4xl mx-auto mb-14">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-lime-200">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-700">Nutrition Summary</h2>
+            <FaChartPie className="text-lime-500 text-2xl" />
           </div>
-        )}
-
-        <div className="text-xl font-bold text-green-700 mt-6 text-center">
-          🧮 Total Calories: {calories} kcal
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center text-gray-700 text-sm sm:text-base">
+            <div>
+              <p className="text-lime-500 font-semibold">Calories</p>
+              <p className="font-medium">{summary.total_calories || 0} kcal</p>
+            </div>
+            <div>
+              <p className="text-lime-500 font-semibold">Protein</p>
+              <p className="font-medium">{summary.total_protein?.toFixed(2) || 0} g</p>
+            </div>
+            <div>
+              <p className="text-lime-500 font-semibold">Carbs</p>
+              <p className="font-medium">{summary.total_carbs?.toFixed(2) || 0} g</p>
+            </div>
+            <div>
+              <p className="text-lime-500 font-semibold">Fats</p>
+              <p className="font-medium">{summary.total_fats?.toFixed(2) || 0} g</p>
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* Logs Section */}
+      <div className="flex flex-col items-center space-y-12">
+        {Object.keys(groupedLogs).length === 0 ? (
+          <div className="text-center text-gray-500 text-lg">No food logs found for the selected date.</div>
+        ) : (
+          Object.keys(groupedLogs).map((meal, index) => (
+            <div
+              key={index}
+              className="w-full max-w-3xl bg-white rounded-2xl shadow-lg p-6 border border-lime-200"
+            >
+              <h3 className="text-2xl font-semibold  text-gray-700 mb-6 flex items-center gap-2">
+                <GiMeal className="text-lime-500  text-2xl" /> {meal}
+              </h3>
+              <div className="space-y-6">
+                {groupedLogs[meal].map((log, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-lime-50 rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-lg transition"
+                  >
+                    <div className="flex justify-between items-center mb-3">
+                      <div>
+                        <h4 className="text-lg font-bold  text-lime-500">{log.food_name}</h4>
+                        <p className="text-sm text-gray-500">Quantity: {log.quantity}</p>
+                      </div>
+                      <FaUtensils className="text-lime-500 text-xl" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-gray-700">
+                      <p><span className="text-lime-500 font-semibold">Calories:</span> {log.calories} kcal</p>
+                      <p><span className="text-lime-500 font-semibold">Protein:</span> {log.protein.toFixed(2)} g</p>
+                      <p><span className="text-lime-500 font-semibold">Carbs:</span> {log.carbs.toFixed(2)} g</p>
+                      <p><span className="text-lime-500 font-semibold">Fats:</span> {log.fats.toFixed(2)} g</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

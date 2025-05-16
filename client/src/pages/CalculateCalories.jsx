@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const CalculateCalories = () => {
   const [food, setFood] = useState('');
-  const [mealType, setMealType] = useState('Breakfast');
   const [quantity, setQuantity] = useState('');
-  const [logs, setLogs] = useState([]);
+  const [result, setResult] = useState(null);
+  const navigate = useNavigate();
 
   const handleAdd = async () => {
-    if (!food || !mealType || !quantity) {
+    if (!food || !quantity) {
       alert('Please fill all fields');
       return;
     }
@@ -16,29 +17,10 @@ const CalculateCalories = () => {
     try {
       const token = localStorage.getItem('token');
 
-      // 🔎 GET food details from backend by name
-      const foodRes = await axios.get(`http://localhost:8000/api/food/name/${food}/`, {
-        headers: { Authorization: `Token ${token}` }
-      });
-
-      const foodData = foodRes.data; // { id, name, calories_per_unit }
-      const totalCalories = foodData.calories_per_unit * quantity;
-
-      const newLog = {
-        food: foodData.name,
-        mealType,
-        quantity,
-        totalCalories,
-      };
-
-      setLogs(prev => [...prev, newLog]);
-
-      // 📤 POST log to backend
-      await axios.post(
-        'http://localhost:8000/health/food-logs/calculate_nutrition/',
+      const response = await axios.post(
+        'http://localhost:8000/health/foods/calculate_nutrition/',
         {
-          food_name: foodData.name,
-          meal_type: mealType,
+          food_name: food,
           quantity: Number(quantity)
         },
         {
@@ -49,36 +31,38 @@ const CalculateCalories = () => {
         }
       );
 
+      setResult(response.data);
       setFood('');
       setQuantity('');
     } catch (error) {
       console.error('Error:', error);
-      alert('Food not found or failed to post to backend.');
+      alert('Failed to post to backend.');
+    }
+  };
+
+  const handleRedirect = () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/foodlogform');
+    } else {
+      navigate('/login');
     }
   };
 
   return (
     <div className="p-4 max-w-xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Calorie Tracker</h2>
+      <h2 className="text-center text-2xl md:text-3xl font-bold text-gray-800 pb-6">
+        <span className='text-lime-400'>C</span>alorie <span className='text-lime-400'>T</span>racker
+      </h2>
 
       <div className="flex flex-col gap-4 mb-6">
         <input
           type="text"
-          placeholder="Food name (e.g., Rice)"
+          placeholder="Food name (e.g., Idly)"
           value={food}
           onChange={(e) => setFood(e.target.value)}
           className="border p-2 rounded"
         />
-
-        <select
-          value={mealType}
-          onChange={(e) => setMealType(e.target.value)}
-          className="border p-2 rounded"
-        >
-          <option>Breakfast</option>
-          <option>Afternoon</option>
-          <option>Night</option>
-        </select>
 
         <input
           type="number"
@@ -96,15 +80,27 @@ const CalculateCalories = () => {
         </button>
       </div>
 
-      <h3 className="text-xl font-semibold mb-2">Food Logs</h3>
-      <ul className="space-y-2">
-        {logs.map((log, index) => (
-          <li key={index} className="border p-2 rounded bg-gray-100">
-            <strong>{log.food}</strong> ({log.mealType}) - {log.quantity} unit(s) ={" "}
-            <span className="font-bold">{log.totalCalories}</span> cal
-          </li>
-        ))}
-      </ul>
+      {result && (
+        <div className="p-4 text-lime-800 rounded-lg shadow-md bg-lime-50">
+          <h3 className="text-lg font-semibold mb-2">Nutrition Summary</h3>
+          <p><strong>Food:</strong> {result.food}</p>
+          <p><strong>Quantity:</strong> {result.quantity}</p>
+          <p><strong>Calories:</strong> {result.calories} cal</p>
+          <p><strong>Protein:</strong> {result.protein} g</p>
+          <p><strong>Carbs:</strong> {result.carbs} g</p>
+          <p><strong>Fats:</strong> {result.fats} g</p>
+        </div>
+      )}
+
+      <div className="flex flex-col items-center justify-center mt-6">
+        <h1 className="text-center mb-2">If you want to continue the process of Health tracking...</h1>
+        <button
+          onClick={handleRedirect}
+          className="mt-2 bg-lime-500 hover:bg-lime-600 text-white rounded px-4 py-2"
+        >
+          Click here
+        </button>
+      </div>
     </div>
   );
 };

@@ -15,7 +15,7 @@ function Hero() {
           <p className="text-base md:text-xl mb-6">
             Track your fitness goals, monitor health metrics, and stay motivated — all in one powerful platform built for your wellness.
           </p>
-          <button className="bg-lime-400 justify-items-center items-center flex text-black font-semibold px-6 py-3 rounded-full shadow-md hover:bg-green-700 transition">
+          <button className="bg-lime-400 justify-items-center items-center flex text-black font-semibold px-6 py-3 rounded-full shadow-md hover:bg-lime-500 transition">
             Get Started
           </button>
         </div>

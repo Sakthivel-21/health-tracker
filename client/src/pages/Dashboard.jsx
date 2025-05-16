@@ -1,100 +1,213 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import {
-  FaUserCircle,
-  FaHeartbeat,
-  FaChartLine,
-  FaSignOutAlt,
-  FaWeight,
+  FaChartPie,
   FaFireAlt,
   FaBirthdayCake,
-  FaBars
+  FaWeight,
+  FaUtensils,
+  FaDrumstickBite,
+  FaBreadSlice,
+  FaBacon,
 } from 'react-icons/fa';
 
 const Dashboard = () => {
   const [userHealth, setUserHealth] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [summary, setSummary] = useState({});
+  const [todayLogs, setTodayLogs] = useState([]);
+  const [topOverallFood, setTopOverallFood] = useState(null);
+  const [topOverallSnack, setTopOverallSnack] = useState(null);
 
   useEffect(() => {
-    const fetchUserHealth = async () => {
+    const token = localStorage.getItem('token');
+
+    const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:8000/auth/user-health/', {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        });
-        setUserHealth(response.data.results[0]);
+        const [userHealthRes, summaryRes, logsRes, topFoodsRes] = await Promise.all([
+          axios.get('http://localhost:8000/auth/user-health/', {
+            headers: { Authorization: `Token ${token}` },
+          }),
+          axios.get('http://localhost:8000/health/food-logs/today_summary/', {
+            headers: { Authorization: `Token ${token}` },
+          }),
+          axios.get('http://localhost:8000/health/food-logs/history/', {
+            headers: { Authorization: `Token ${token}` },
+          }),
+          axios.get('http://localhost:8000/health/food-logs/top_foods/', {
+            headers: { Authorization: `Token ${token}` },
+          }),
+        ]);
+
+        setUserHealth(userHealthRes.data.results[0]);
+        setSummary(summaryRes.data.today_summary || {});
+
+        const today = new Date().toISOString().split('T')[0];
+        const logs = logsRes.data[today] || [];
+        setTodayLogs(logs);
+
+        const topFoods = topFoodsRes.data;
+        const isSnack = name =>
+          ['biscuit', 'cookie', 'chips', 'snack', 'murukku'].some(snack =>
+            name.toLowerCase().includes(snack)
+          );
+
+        const foodItems = topFoods.filter(item => !isSnack(item.food__name));
+        const snackItems = topFoods.filter(item => isSnack(item.food__name));
+
+        setTopOverallFood(foodItems[0] || null);
+        setTopOverallSnack(snackItems[0] || null);
       } catch (error) {
-        console.error('Error fetching user health data:', error);
+        console.error('Dashboard loading error:', error);
       }
     };
 
-    fetchUserHealth();
+    fetchData();
   }, []);
 
-  return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className={`w-full md:w-64 bg-lime-100 text-black flex flex-col p-6 space-y-6 transition-all duration-300 ${menuOpen ? 'block' : 'hidden md:block'}`}>
-        <div className="text-3xl font-bold tracking-wide mb-6">HealthApp</div>
+  const groupedLogs = todayLogs.reduce((acc, log) => {
+    const meal = log.meal_type;
+    if (!acc[meal]) acc[meal] = [];
+    acc[meal].push(log);
+    return acc;
+  }, {});
 
-        <div className="flex flex-col gap-4 text-lg">
-          <div className="flex items-center gap-3 hover:text-black font-medium cursor-pointer">
-            <FaUserCircle className="text-lime-700" />
-            <span>Profile</span>
-          </div>
-          <div className="flex items-center gap-3 hover:text-black font-medium cursor-pointer">
-            <FaHeartbeat className="text-lime-700" />
-            <span>Health</span>
-          </div>
-          <div className="flex items-center gap-3 hover:text-black font-medium cursor-pointer">
-            <FaChartLine className="text-lime-700" />
-            <span>Reports</span>
-          </div>
-          <div className="flex items-center gap-3 text-red-700 font-medium cursor-pointer mt-auto">
-            <FaSignOutAlt className="text-lime-700" />
-            <span>Logout</span>
-          </div>
+  return (
+    <div className="min-h-screen bg-lime-50">
+      {/* Header */}
+      <div className="relative bg-lime-200 h-24 md:h-28">
+        <div className="absolute inset-0 bg-lime-500 bg-opacity-70 flex items-center justify-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-white">Your Health Dashboard</h1>
         </div>
       </div>
 
-      {/* Mobile Menu Toggle */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-lime-400 text-black">
-        <div className="text-2xl font-bold">HealthApp</div>
-        <button onClick={() => setMenuOpen(!menuOpen)}>
-          <FaBars size={24} />
-        </button>
-      </div>
-
       {/* Main Content */}
-      <div className="flex-1 p-6 flex justify-center items-center">
-        {userHealth ? (
-          <div className="bg-white shadow-xl rounded-3xl p-10 w-full max-w-md text-center border-2 border-lime-500">
-            <h2 className="text-3xl font-bold mb-6 text-gray-800">
-              Welcome, {userHealth.user}
-            </h2>
-            <h3 className="text-2xl font-semibold mb-4 text-lime-600 flex items-center justify-center gap-2">
-              <FaHeartbeat /> Your Health Data
+      <div className="max-w-7xl mx-auto px-4 py-8 md:py-10 grid md:grid-cols-2 gap-8">
+        {/* Left Side */}
+        <div className="space-y-8">
+          {/* Profile Summary */}
+          <div className="bg-white shadow rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-lime-500 mb-4">Profile Summary</h2>
+            {userHealth && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700 text-sm">
+                <div className="flex items-center gap-2">
+                  <FaBirthdayCake className="text-lime-500" />
+                  <span>Age: {userHealth.age}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FaWeight className="text-lime-500" />
+                  <span>Weight: {userHealth.weight} kg</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FaFireAlt className="text-lime-500" />
+                  <span>Calorie Limit: {userHealth.daily_calorie_limit} kcal</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Today's Nutrition Summary */}
+          <div className="bg-white shadow rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-lime-500 mb-4 flex items-center gap-2">
+              <FaChartPie className="text-lime-500" /> Today's Nutrition Summary
             </h3>
-            <div className="space-y-4 text-lg text-gray-700">
-              <p className="bg-lime-100 p-3 rounded-xl flex items-center justify-center gap-2">
-                <FaBirthdayCake className="text-lime-600" />
-                {userHealth.age} years
-              </p>
-              <p className="bg-lime-100 p-3 rounded-xl flex items-center justify-center gap-2">
-                <FaWeight className="text-lime-600" />
-                {userHealth.weight} kg
-              </p>
-              <p className="bg-lime-100 p-3 rounded-xl flex items-center justify-center gap-2">
-                <FaFireAlt className="text-lime-600" />
-                {userHealth.daily_calorie_limit} kcal/day
-              </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700 text-sm">
+              <div className="flex justify-between">
+                <span>Calories</span>
+                <span>{summary.total_calories || 0} kcal</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Protein</span>
+                <span>{summary.total_protein?.toFixed(2) || 0} g</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Carbohydrates</span>
+                <span>{summary.total_carbs?.toFixed(2) || 0} g</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Fats</span>
+                <span>{summary.total_fats?.toFixed(2) || 0} g</span>
+              </div>
             </div>
           </div>
-        ) : (
-          <p className="text-gray-600 text-xl">Loading health data...</p>
-        )}
+
+          {/* Most Eaten Section */}
+          <div className="bg-white shadow rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-lime-500 mb-4">Most Eaten (All Time)</h2>
+            <div className="space-y-3 text-gray-800 text-sm">
+              {topOverallFood && (
+                <div className="flex justify-between">
+                  <span><b>{topOverallFood.food__name}</b></span>
+                  <span>{topOverallFood.times_eaten} times</span>
+                </div>
+              )}
+              {topOverallSnack && (
+                <div className="flex justify-between">
+                  <span><b>{topOverallSnack.food__name}</b> (Snack)</span>
+                  <span>{topOverallSnack.times_eaten} times</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side - Today's Logs */}
+        <div className="bg-white shadow-xl rounded-2xl p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-lime-500 flex items-center gap-2">
+                <FaUtensils className="text-lime-500" /> Today's Food Logs
+              </h2>
+              <span className="bg-lime-100 text-lime-500 px-3 py-1 rounded-full text-sm">
+                {todayLogs.length} Logs
+              </span>
+            </div>
+
+            {todayLogs.length === 0 ? (
+              <p className="text-gray-500">No food logs for today.</p>
+            ) : (
+              ['breakfast', 'lunch', 'dinner', 'snacks'].map(meal =>
+                groupedLogs[meal] ? (
+                  <div key={meal} className="mb-4">
+                    <h3 className="text-lg font-semibold text-lime-500 capitalize mb-2">{meal}</h3>
+                    <ul className="space-y-3">
+                      {groupedLogs[meal].map((log, index) => (
+                        <li
+                          key={index}
+                          className="bg-lime-50 rounded-xl p-4 border border-lime-200"
+                        >
+                          <div className="flex justify-between font-medium">
+                            <span>{log.food_name} (x{log.quantity})</span>
+                            <span className="text-lime-500">{log.calories} kcal</span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-sm text-gray-600 mt-1">
+                            <div className="flex items-center gap-1">
+                              <FaDrumstickBite className="text-lime-500" /> Protein: {log.protein}g
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <FaBreadSlice className="text-lime-500" /> Carbs: {log.carbs}g
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <FaBacon className="text-lime-500" /> Fats: {log.fats.toFixed(2)}g
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null
+              )
+            )}
+          </div>
+
+          <div className="mt-6 pt-4 border-t text-right">
+            <Link to="/foodlog">
+              <button className="bg-lime-500 hover:bg-lime-400 text-white font-semibold px-4 py-2 rounded-xl shadow">
+                View Full History
+              </button>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

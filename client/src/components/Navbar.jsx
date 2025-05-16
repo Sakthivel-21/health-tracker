@@ -113,9 +113,9 @@ const Navbar = () => {
 
   const navItems = [
     { name: 'Home', link: '/' },
-    { name: 'Calculate Calories', link: '/foodlog' },
-    { name: 'Contact us', link: '/contact' },
-  ];
+    { name: 'Calculate Calories', link: '/foodlogform' },
+    { name: 'Contact us', link: '/contactus' },
+  ]
 
   const handleNavigation = (itemName, itemLink) => {
     if (itemName === 'Calculate Calories') {
