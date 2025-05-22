@@ -12,6 +12,7 @@ import FoodLog from './pages/FoogLog'
 import CalculateCalories from './pages/CalculateCalories'
 import Contact from './pages/Contact'
 import FoodLogForm from './pages/FoodLogForm'
+import Demo from './components/Demo'
 
 function App() {
   return (
@@ -39,3 +40,29 @@ function App() {
 }
 
 export default App
+
+{/*import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Demo from './components/Demo'
+import FoodLogForm from './pages/FoodLogForm'
+
+function App() {
+  return (
+    <>
+    <Router>
+      <div className="flex flex-col min-h-screen">
+        <Routes>
+          <Route path="/" element={<Demo />} />
+          <Route path="/foodlogform" element={<FoodLogForm />} />
+        </Routes>
+      </div>
+
+    </Router>
+    
+    </>
+  )
+}
+
+export default App*/}
+
+

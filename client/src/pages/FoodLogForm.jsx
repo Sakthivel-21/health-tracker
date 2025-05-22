@@ -106,7 +106,7 @@ const FoodLogForm = ({ onLogSubmitted }) => {
       // ✅ Navigate safely
       setTimeout(() => {
         try {
-          navigate('/foodlog');
+          navigate('/dashboard');
         } catch (navError) {
           console.error('Navigation error:', navError);
         }
